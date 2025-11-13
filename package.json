@@ -3,6 +3,5 @@
     "net": "^1.0.2"
   },
   "devDependencies": {
-    "@types/node": "^24.10.1"
   }
 }
