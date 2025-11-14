@@ -2,7 +2,7 @@ const OpenAI = require("openai");
 const { startLoader, stopLoader } = require("./loader-helpers");
 require("dotenv").config();
 
-const practice_prompt = "Create ASCII art of a glass of milk. Make it as big as you can";
+const practice_prompt = "Create ASCII art of a tree on grass. Make it as big as you can";
 
 class OpenAIService {
     constructor() {
