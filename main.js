@@ -1,29 +1,80 @@
 const net = require('node:net');
+const { TELNET_DATA, TELNET_NEWLINE, TELNET_CARRIAGE_RETURN } = require('./protocols');
+const TelnetParser = require('./TelnetParser');
 
-const server = net.createServer((socket) => {
-    console.log("client connected");
+class TelnetSession {
+    constructor(socket) {
+        this.socket = socket;
+        this.textBuffer = null; // buffer
+        this.telnetParser = new TelnetParser();
+        this.string = this.instruction();
+    }
 
-    socket.setEncoding('utf8');
+    instruction(data) {
+        data.forEach((byte) => {
+            this.telnetParser.processByte(byte);
 
-    // sequential callbacks in the listeners array
-    socket.on('data', (data) => {
-        console.log(`received from client: ${data}`);
+            if (this.telnetParser.state === TELNET_DATA) {
+                this.textBuffer += this.telnetParser(byte).char();
+            }
+        })
 
-        socket.write(`Echo: ${data}`);
-    })
+        this.string = textBuffer;
+        this.textBuffer = null;
+        return this.string;
+    }
+}
 
-    socket.on('end', () => {
-        console.log(`Client disconnected`);
-        socket.end();
-    })
+class App {
+    start() {
+        const server = net.createServer((socket) => {
+            const session = new TelnetSession(socket);
 
-    socket.on('error', (error) => {
-        console.log('Socket error:', error);
-    })
+            if (session.string.includes("echo")) {
+                this.write(session);
+            }
+            if (session.string.includes("help")) {
+                this.listCommands(session)
+            }
+            if (session.string.includes("image")) {
+                this.asciiArt(session)
+            }
+            if (session.string.includes("exit")) {
+                this.exit(session);
+            }
+        });
 
-    socket.write('Welcome to the TCP server!\r\n')
-});
+        server.listen(23, () => {
+            console.log('TCP server running on port 23');
+        })
+    }
 
-server.listen(23, () => {
-    console.log('TCP server running on port 23');
-})
+    listCommands() {
+        return ```
+                echo: returns message
+                help: lists all commands
+                image: generates ascii image
+                exit: leaves the program
+            ```
+    }
+
+    write() {
+        this.session.write(this.string);
+    }
+
+    listCommands() {
+        this.socket.write(listCommands());
+    }
+
+    asciiArt() {
+        // ...
+    }
+
+    exit() {
+        this.socket.write("the user requested to end session. ending...")
+        this.socket.end();
+    }
+}
+
+const app = new App();
+app.start();
